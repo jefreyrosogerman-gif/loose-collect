@@ -1,46 +1,197 @@
-<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="#111827"><title>Loose Collect — Classeur Pokémon</title><link rel="apple-touch-icon" sizes="512x512" href="logo.png"><link rel="icon" type="image/png" href="logo.png"><style>
-*{box-sizing:border-box}body{margin:0;background:#f2f4f9;color:#202b40;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif}header{background:#111827;color:white;padding:30px 20px}header h1{font-size:clamp(30px,6vw,46px);margin:0 0 8px}header p{margin:0;color:#b3bdd0;font-size:19px}main{max-width:1080px;margin:auto;padding:28px 18px}.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.stat{background:white;border-radius:17px;text-align:center;padding:19px 5px}.stat strong{display:block;font-size:clamp(23px,5vw,37px)}.stat span{font-size:13px;color:#66728a}.search{width:100%;border:1px solid #ccd5e4;border-radius:16px;padding:18px;margin:22px 0 12px;font-size:18px;background:#fff}.filters{display:flex;gap:8px;flex-wrap:wrap}.filters button{border:1px solid #ccd5e4;border-radius:13px;padding:12px 16px;background:white;font-size:15px;font-weight:600;color:#1c2b45}.filters button.active{background:#1d2d54;color:#fff}#count{margin:20px 0 12px;color:#65718a}.cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.card{background:#fff;border-radius:18px;padding:13px;min-width:0}.art{background:#e7ebf1;border-radius:14px;min-height:160px;display:flex;align-items:center;justify-content:center;overflow:hidden}.art img{display:block;width:100%;height:auto;aspect-ratio:0.715;object-fit:contain}.fallback{display:none;text-align:center;padding:20px;font-size:13px;color:#64748b}.card h2{font-size:clamp(17px,3vw,23px);margin:14px 0 8px;overflow-wrap:anywhere}.detail{font-size:14px;line-height:1.5;color:#65718a}.bottom{display:flex;justify-content:space-between;align-items:center;gap:5px;margin-top:12px;font-weight:700}.qty{background:#eaf0fb;border-radius:30px;padding:6px 9px;font-size:13px}.price{font-size:clamp(14px,2.8vw,20px);white-space:nowrap}.notice{color:#66728a;font-size:12px;line-height:1.5;margin-top:24px}@media(min-width:720px){.cards{grid-template-columns:repeat(4,minmax(0,1fr))}.card{padding:15px}.detail{font-size:15px}}
-</style></head><body><header><h1>LOOSE COLLECT</h1><p>Mon classeur Pokémon · consultation</p></header><main><section class="stats"><div class="stat"><strong id="refs">37</strong><span>Références</span></div><div class="stat"><strong id="totalCards">43</strong><span>Cartes</span></div><div class="stat"><strong id="totalValue">76,50</strong><span>Valeur CHF</span></div></section><input class="search" id="search" placeholder="🔎 Pokémon, numéro, série…" aria-label="Rechercher"><div class="filters"><button class="active" data-filter="all">Toutes</button><button data-filter="fr">Français</button><button data-filter="dupes">Doublons</button></div><div id="count"></div><section id="cards" class="cards"></section><p class="notice">Images de référence des éditions correspondantes, fournies par Pokémon TCG API. Les visuels peuvent être en anglais même pour une carte française ou allemande. Les prix sont des estimations historiques en CHF, non des cotations actualisées. Connexion Internet requise pour les illustrations.</p></main><script>
-const cards=[
-['Drascore','23/130','FR','Diamant & Perle','',1,1.5,'dp1','23'],
-['Roserade','13/130','DE','Diamant & Perle','Reverse',1,3,'dp1','13'],
-['Quilava','51/100','EN','EX Tempête de Sable','',1,3,'ex2','51'],
-['Kirlia','34/109','EN','EX Rubis & Saphir','',1,1.5,'ex1','34'],
-['Flobio','40/109','FR','EX Rubis & Saphir','',1,2,'ex1','40'],
-['Manzaï','71/130','FR','Diamant & Perle','',2,1,'dp1','71'],
-['Pachirisu','35/130','FR','Diamant & Perle','',1,2,'dp1','35'],
-['Schlapor','30/130','DE','Diamant & Perle','',1,1,'dp1','30'],
-['Chansey','20/115','EN','EX Forces Cachées','',2,2,'ex11','20'],
-['Warp Point','93/115','EN','EX Forces Cachées','',1,1.5,'ex11','93'],
-['Loudred','39/101','EN','EX Légendes Oubliées','',1,1.5,'ex5','39'],
-['Igglybuff','37/101','EN','EX Légendes Oubliées','',1,3.5,'ex5','37'],
-['Bronzong','6/123','DE','Trésors Mystérieux','Reverse',1,3,'dp2','6'],
-['Chaffreux','36/130','FR','Diamant & Perle','',1,1.5,'dp1','36'],
-['Seadra','39/97','EN','EX Dragon','',2,2,'ex3','39'],
-['Macronium δ','26/101','FR','EX Gardiens du Pouvoir / Frontières Franchies δ','',1,3,'ex15','26'],
-['Mystibule','17/108','FR','EX Gardiens du Pouvoir','',1,2,'ex16','17'],
-['Ancient Tomb','87/101','EN','EX Légendes Oubliées','',1,1,'ex5','87'],
-['Excelangue δ','19/101','FR','EX Frontières Franchies δ','',1,2,'ex15','19'],
-['Starmie','64/102','DE','Set de Base','Usée',1,.5,'base1','64'],
-['Skitty','79/100','EN','EX Tempête de Sable','',2,1.5,'ex2','79'],
-['Jigglypuff','63/101','EN','EX Légendes Oubliées','',3,2,'ex5','63'],
-['Draco δ','28/101','FR','EX Frontières Franchies δ','',1,8,'ex15','28'],
-['Psyduck','16/122','EN','XY Rupture TURBO','',1,1.5,'xy9','16'],
-['Rattata','66/108','FR','XY Évolutions','',1,1,'xy12','66'],
-['Ponyta','19/108','FR','XY Évolutions','',1,1,'xy12','19'],
-['Doduo','69/108','FR','XY Évolutions','',1,1,'xy12','69'],
-['Nidoran ♂','43/108','FR','XY Évolutions','',1,1,'xy12','43'],
-['Soporifik','49/108','FR','XY Évolutions','',1,1,'xy12','49'],
-['Caninos','17/108','FR','XY Évolutions','',1,1.5,'xy12','17'],
-['Porygon','71/108','FR','XY Évolutions','',1,1.5,'xy12','71'],
-['Élektek','41/108','FR','XY Évolutions','',1,1,'xy12','41'],
-['Magnéti','37/108','FR','XY Évolutions','',1,1,'xy12','37'],
-['Shellder','23/122','EN','XY Rupture TURBO','',1,.5,'xy9','23'],
-['Pikachu','35/108','FR','XY Évolutions','',1,2,'xy12','35'],
-['Machopeur','58/108','FR','XY Évolutions','',1,1,'xy12','58'],
-['Stari','30/108','FR','XY Évolutions','',1,1,'xy12','30']
-];
-const $=id=>document.getElementById(id),fmt=n=>n.toLocaleString('fr-CH',{minimumFractionDigits:2,maximumFractionDigits:2});
-$('refs').textContent=cards.length;$('totalCards').textContent=cards.reduce((s,c)=>s+c[5],0);$('totalValue').textContent=fmt(cards.reduce((s,c)=>s+c[5]*c[6],0));
-let filter='all';function render(){const q=$('search').value.toLocaleLowerCase('fr').trim();const found=cards.filter(c=>(filter==='all'||filter==='fr'&&c[2]==='FR'||filter==='dupes'&&c[5]>1)&&[c[0],c[1],c[2],c[3],c[4]].join(' ').toLocaleLowerCase('fr').includes(q));$('count').textContent=found.length+' référence(s) trouvée(s)';$('cards').replaceChildren(...found.map(c=>{const e=document.createElement('article');e.className='card';const image=`https://images.pokemontcg.io/${c[7]}/${c[8]}.png`;e.innerHTML=`<div class="art"><img loading="lazy" src="${image}" alt="Carte ${c[0]} ${c[1]}" onerror="this.style.display='none';this.nextElementSibling.style.display='block'"><span class="fallback">Illustration indisponible<br>${c[7]} / ${c[8]}</span></div><h2></h2><div class="detail"></div><div class="bottom"><span class="qty">× ${c[5]}</span><span class="price">${fmt(c[6])} CHF</span></div>`;e.querySelector('h2').textContent=c[0];e.querySelector('.detail').textContent=`${c[1]} · ${c[2]} · ${c[3]}${c[4]?' · '+c[4]:''}`;return e}))}document.querySelectorAll('[data-filter]').forEach(b=>b.addEventListener('click',()=>{filter=b.dataset.filter;document.querySelectorAll('[data-filter]').forEach(x=>x.classList.toggle('active',x===b));render()}));$('search').addEventListener('input',render);render();
-</script></body></html>
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Loose Collect</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#f2f4f8;color:#15213b;font-family:Arial,sans-serif}
+header{background:#111827;color:white;padding:26px 18px}
+h1{margin:0;font-size:30px}
+header p{color:#aebbd0}
+main{max-width:1000px;margin:auto;padding:18px}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}
+.stat{background:white;border-radius:14px;padding:16px 5px;text-align:center}
+.stat strong{display:block;font-size:23px}
+.stat span{font-size:12px;color:#64748b}
+input{width:100%;padding:17px;border:1px solid #ccd5e3;border-radius:12px;font-size:16px;margin:18px 0 12px}
+.filters{display:flex;gap:8px;flex-wrap:wrap}
+button{padding:12px;border:1px solid #ccd5e3;background:white;border-radius:10px;font-weight:bold;color:#15213b}
+button.active{background:#1c315b;color:white}
+#status{margin:18px 0;color:#64748b}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(155px,1fr));gap:12px}
+.card{background:white;border-radius:14px;padding:12px;overflow:hidden}
+.card img{width:100%;aspect-ratio:2.5/3.5;object-fit:contain;background:#f1f5f9;border-radius:8px}
+.card h3{margin:10px 0 5px;font-size:17px}
+.card p{font-size:13px;color:#64748b;margin:5px 0}
+.price{font-weight:bold;font-size:18px;margin-top:10px}
+footer{padding:30px 18px;color:#64748b;font-size:12px;text-align:center}
+</style>
+</head>
+<body>
+<header>
+<h1>LOOSE COLLECT</h1>
+<p>Mon classeur Pokémon · Consultation</p>
+</header>
+<main>
+<div class="stats">
+<div class="stat"><strong id="refs">—</strong><span>Références</span></div>
+<div class="stat"><strong id="total">—</strong><span>Cartes</span></div>
+<div class="stat"><strong id="value">—</strong><span>Valeur CHF</span></div>
+</div>
+
+<input id="search" placeholder="🔎 Pokémon, numéro, série...">
+
+<div class="filters">
+<button class="active" data-filter="all">Toutes</button>
+<button data-filter="fr">Français</button>
+<button data-filter="duplicates">Doublons</button>
+</div>
+
+<p id="status">Chargement des cartes...</p>
+<div class="cards" id="cards"></div>
+</main>
+<footer>
+Prix indicatifs en CHF, non actualisés.
+Les modifications dans Supabase apparaissent après actualisation.
+</footer>
+
+<script>
+const SUPABASE_URL =
+"https://iajlrvudypqzcfiwdcyt.supabase.co";
+
+const SUPABASE_KEY =
+"sb_publishable_B5LSj-zXH3A1eo9flE0flQ_RsRlD7-F";
+
+const TABLE = "loose_collect_cards";
+
+let inventory = [];
+let filter = "all";
+
+const $ = id => document.getElementById(id);
+
+function field(obj,names,fallback=""){
+  for(const name of names){
+    if(obj[name] !== undefined && obj[name] !== null)
+      return obj[name];
+  }
+  return fallback;
+}
+
+function escapeHTML(value){
+  return String(value).replace(/[&<>"']/g,c=>({
+    "&":"&amp;",
+    "<":"&lt;",
+    ">":"&gt;",
+    '"':"&quot;",
+    "'":"&#39;"
+  }[c]));
+}
+
+function normalize(row){
+  return {
+    name:field(row,["name","nom","pokemon","card_name"],"Sans nom"),
+    number:field(row,["number","numero","card_number"],""),
+    language:field(row,["language","langue","lang"],""),
+    set:field(row,["set_name","serie","set","series"],""),
+    variant:field(row,["variant","variante","rarity","rarete"],""),
+    quantity:Number(field(row,["quantity","quantite","qty"],1))||0,
+    price:Number(field(row,["price_chf","prix_chf","unit_price","price","prix"],0))||0,
+    image:field(row,["image_url","image","photo_url","photo"],"")
+  };
+}
+
+function render(){
+  const query=$("search").value.toLowerCase().trim();
+
+  let visible=inventory.filter(c=>{
+    const matches=[
+      c.name,c.number,c.set,c.language,c.variant
+    ].join(" ").toLowerCase().includes(query);
+
+    if(!matches)return false;
+    if(filter==="fr")
+      return c.language.toUpperCase()==="FR";
+    if(filter==="duplicates")
+      return c.quantity>1;
+    return true;
+  });
+
+  $("refs").textContent=inventory.length;
+  $("total").textContent=inventory.reduce((s,c)=>s+c.quantity,0);
+  $("value").textContent=inventory.reduce(
+    (s,c)=>s+c.quantity*c.price,0
+  ).toFixed(2);
+
+  $("status").textContent=visible.length+" référence(s) affichée(s)";
+
+  $("cards").innerHTML=visible.map(c=>`
+    <article class="card">
+      ${c.image
+        ? `<img src="${escapeHTML(c.image)}" alt="${escapeHTML(c.name)}" loading="lazy" onerror="this.style.display='none'">`
+        : `<div style="height:140px;background:#e9edf5;border-radius:8px;display:grid;place-items:center;color:#64748b">Image indisponible</div>`
+      }
+      <h3>${escapeHTML(c.name)}</h3>
+      <p>${escapeHTML(c.number)} · ${escapeHTML(c.language)}</p>
+      <p>${escapeHTML(c.set)}</p>
+      <p>${escapeHTML(c.variant)}</p>
+      <p>Quantité : ${c.quantity}</p>
+      <div class="price">${c.price.toFixed(2)} CHF</div>
+    </article>
+  `).join("");
+}
+
+async function loadCards(){
+  try{
+    const response=await fetch(
+      SUPABASE_URL+"/rest/v1/"+TABLE+"?select=*",
+      {
+        headers:{
+          "apikey":SUPABASE_KEY,
+          "Authorization":"Bearer "+SUPABASE_KEY
+        }
+      }
+    );
+
+    if(!response.ok){
+      const detail=await response.text();
+      throw new Error("HTTP "+response.status+" : "+detail.slice(0,250));
+    }
+
+    const data=await response.json();
+
+    if(!Array.isArray(data))
+      throw new Error("Réponse inattendue de Supabase");
+
+    inventory=data.map(normalize);
+    render();
+
+    if(!inventory.length){
+      $("status").textContent=
+        "La connexion fonctionne, mais la table ne contient aucune carte visible.";
+    }
+
+  }catch(error){
+    $("status").textContent=
+      "Erreur de connexion : "+error.message;
+  }
+}
+
+$("search").addEventListener("input",render);
+
+document.querySelectorAll("[data-filter]").forEach(button=>{
+  button.addEventListener("click",()=>{
+    filter=button.dataset.filter;
+    document.querySelectorAll("[data-filter]").forEach(
+      b=>b.classList.toggle("active",b===button)
+    );
+    render();
+  });
+});
+
+loadCards();
+</script>
+</body>
+</html>
